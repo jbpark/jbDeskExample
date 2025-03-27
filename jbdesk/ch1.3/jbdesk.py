@@ -198,6 +198,7 @@ class JbDesk(QMainWindow):
         self.to_layout.addWidget(self.to_timezone)
         self.to_group.setLayout(self.to_layout)
         self.to_timezone.addItems(["US/Pacific", "Asia/Seoul"])
+        self.to_timezone.setCurrentText("Asia/Seoul")
 
         self.timezone_layout.addWidget(self.from_group)
         self.timezone_layout.addWidget(self.to_group)
