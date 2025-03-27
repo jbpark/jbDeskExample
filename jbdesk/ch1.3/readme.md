@@ -1,5 +1,5 @@
-# JbDesk 1.2편-표기법 변환
-https://javata.tistory.com/53
+# JbDesk 1.3편-로그 timezone 변경
+https://javata.tistory.com/54
 
 # 실행 방법
 run.bat
