@@ -28,5 +28,12 @@ if %errorlevel% neq 0 (
     pip install pytz
 )
 
+:: sqlalchemy 설치
+pip show sqlalchemy >nul 2>nul
+if %errorlevel% neq 0 (
+    echo Installing sqlalchemy...
+    pip install sqlalchemy
+)
+
 :: jbdesk.py 실행
 python jbdesk.py
