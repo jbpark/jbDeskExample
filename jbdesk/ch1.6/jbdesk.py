@@ -101,11 +101,19 @@ class JbDesk(QMainWindow):
     def init_menu(self):
         menu_bar = self.menuBar()
 
-        line_menu = menu_bar.addMenu("줄단위")
-        line_action = QAction("줄 공백 제거", self)
-        line_action.triggered.connect(lambda: self.set_function("줄 공백 제거"))
-        line_menu.addAction(line_action)
+        self.init_menu_line(menu_bar)
 
+        self.init_menu_notation(menu_bar)
+
+        self.init_menu_timezone(menu_bar)
+
+    def init_menu_timezone(self, menu_bar):
+        timezone_menu = menu_bar.addMenu("TimeZone")
+        timezone_action = QAction("로그 TimeZone 변환", self)
+        timezone_action.triggered.connect(lambda: self.set_function("로그 TimeZone 변환"))
+        timezone_menu.addAction(timezone_action)
+
+    def init_menu_notation(self, menu_bar):
         notation_menu = menu_bar.addMenu("표기법")
         notations = ["camelCase", "snake_case", "PascalCase", "SCREAMING_SNAKE_CASE", "Train-Case", "dot.notation"]
         for notation in notations:
@@ -113,10 +121,11 @@ class JbDesk(QMainWindow):
             action.triggered.connect(lambda checked, n=notation: self.set_function(n))
             notation_menu.addAction(action)
 
-        timezone_menu = menu_bar.addMenu("TimeZone")
-        timezone_action = QAction("로그 TimeZone 변환", self)
-        timezone_action.triggered.connect(lambda: self.set_function("로그 TimeZone 변환"))
-        timezone_menu.addAction(timezone_action)
+    def init_menu_line(self, menu_bar):
+        line_menu = menu_bar.addMenu("줄단위")
+        line_action = QAction("줄 공백 제거", self)
+        line_action.triggered.connect(lambda: self.set_function("줄 공백 제거"))
+        line_menu.addAction(line_action)
 
     def set_function(self, function):
         self.selected_function = function
