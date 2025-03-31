@@ -1,0 +1,52 @@
+Vagrant.configure("2") do |config|
+  # ✅ Rocky Linux 8 사용
+  #config.vm.box = "rockylinux/8"
+  config.vm.box = "rockylinux/9"
+
+  # VM 이름 설정
+  config.vm.define "oracle21c" do |oracle|
+    oracle.vm.hostname = "oracle21c"
+
+    # 네트워크 설정 (고정 IP)
+    oracle.vm.network "private_network", ip: "192.168.56.10"
+
+    # VirtualBox 설정
+    oracle.vm.provider "virtualbox" do |vb|
+      vb.name = "oracle21c"
+      vb.memory = "4096"
+      vb.cpus = 2
+    end
+
+    # 호스트 ↔ VM 간 파일 공유
+    oracle.vm.synced_folder ".", "/vagrant"
+
+    # 프로비저닝 (Oracle 21c XE 설치)
+#     oracle.vm.provision "shell", inline: <<-SHELL
+#       echo "=====[ 1. 패키지 업데이트 및 필수 라이브러리 설치 ]====="
+#       sudo yum clean all
+#       sudo yum -y update
+#       sudo yum -y install oracle-database-preinstall-21c glibc libaio net-tools bc unzip
+#
+#       echo "=====[ 2. Oracle RPM 설치 ]====="
+#       if [ -f /vagrant/oracle-database-xe-21c-1.0-1.ol7.x86_64.rpm ]; then
+#         sudo rpm -ivh /vagrant/oracle-database-xe-21c-1.0-1.ol7.x86_64.rpm
+#       else
+#         echo "ERROR: RPM 파일이 없습니다. /vagrant/ 경로를 확인하세요."
+#         exit 1
+#       fi
+#
+#       echo "=====[ 3. Oracle 21c 초기 설정 ]====="
+#       echo -e "manager\nmanager\n" | sudo /etc/init.d/oracle-xe-21c configure
+#
+#       echo "=====[ 4. 환경 변수 설정 ]====="
+#       echo 'export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE' >> /home/vagrant/.bashrc
+#       echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /home/vagrant/.bashrc
+#       echo 'export ORACLE_SID=XE' >> /home/vagrant/.bashrc
+#       source /home/vagrant/.bashrc
+#
+#       echo "=====[ 5. Oracle 서비스 시작 ]====="
+#       sudo systemctl enable oracle-xe-21c
+#       sudo systemctl start oracle-xe-21c
+#     SHELL
+  end
+end
