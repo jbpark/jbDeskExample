@@ -1,6 +1,5 @@
 Vagrant.configure("2") do |config|
   # ✅ Rocky Linux 8 사용
-  # config.vm.box = "rockylinux/8"
   config.vm.box = "rockylinux/9"
   config.disksize.size = '20GB'
 
@@ -18,8 +17,7 @@ Vagrant.configure("2") do |config|
       vb.cpus = 2
     end
 
-    # 호스트 ↔ VM 간 파일 공유
-    config.vm.synced_folder ".", "/vagrant", type: "rsync"
+    config.vm.synced_folder ".", "/vagrant", disabled: true
 
     # 프로비저닝 (Oracle 21c XE 설치)
     oracle.vm.provision "shell", inline: <<-SHELL
@@ -45,8 +43,8 @@ Vagrant.configure("2") do |config|
 
       # 설치 파일 실행
       # -L 옵션 : Redirect (301, 302)가 응답될 경우, redirect 된 링크로 가서, 파일을 다운로드 받음
-      # 파일크기가 2.2GB로 Vagrantfile 위치에 복사 추천 : sudo curl -L -o /vagrant/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm https://download.oracle.com/otn-pub/otn_software/db-express/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
-      sudo dnf -y localinstall /vagrant/oracle-database-xe-21c*
+      sudo curl -L -o oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm https://download.oracle.com/otn-pub/otn_software/db-express/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
+      sudo dnf -y localinstall oracle-database-xe-21c*
     SHELL
   end
 end
