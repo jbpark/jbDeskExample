@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
     end
 
     # 호스트 ↔ VM 간 파일 공유
-    config.vm.synced_folder "./data", "/vagrant", type: "rsync", rsync__args: ["--no-perms"]
+    config.vm.synced_folder ".", "/vagrant", type: "rsync"
 
     # 프로비저닝 (Oracle 21c XE 설치)
     oracle.vm.provision "shell", inline: <<-SHELL

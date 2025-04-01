@@ -8,3 +8,6 @@ __pycache__/
 *.db
 *.rpm
 *.vdi
+*.zip
+*.z01
+*.z02
