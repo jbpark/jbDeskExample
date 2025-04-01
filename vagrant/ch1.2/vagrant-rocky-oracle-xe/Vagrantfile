@@ -2,6 +2,7 @@ Vagrant.configure("2") do |config|
   # ✅ Rocky Linux 8 사용
   # config.vm.box = "rockylinux/8"
   config.vm.box = "rockylinux/9"
+  config.disksize.size = '20GB'
 
   # VM 이름 설정
   config.vm.define "oracle21c" do |oracle|
@@ -18,14 +19,21 @@ Vagrant.configure("2") do |config|
     end
 
     # 호스트 ↔ VM 간 파일 공유
-    oracle.vm.synced_folder ".", "/vagrant"
+    config.vm.synced_folder "./data", "/vagrant"
 
     # 프로비저닝 (Oracle 21c XE 설치)
     oracle.vm.provision "shell", inline: <<-SHELL
-      echo "=====[ 1. 패키지 업데이트 및 필수 라이브러리 설치 ]====="
+      echo "=====[ 1. resize disk ]====="
       sudo yum clean all
       sudo yum -y update
+      sudo yum install cloud-utils-growpart -y
+      sudo growpart /dev/sda 4
+      sudo xfs_growfs /
+      echo "=====[ 1. 패키지 업데이트 및 필수 라이브러리 설치 ]====="
       sudo yum -y install wget
+      sudo systemctl stop firewalld
+      sudo systemctl disable firewalld
+      sudo systemctl status firewalld
 
       # 의존 패키지 설치
       sudo wget https://dl.rockylinux.org/pub/rocky/8/AppStream/x86_64/os/Packages/c/compat-openssl10-1.0.2o-4.el8_6.x86_64.rpm
@@ -33,38 +41,12 @@ Vagrant.configure("2") do |config|
 
       # 사전 설치 파일 다운로드
       sudo curl -o oracle-database-preinstall-21c-1.0-1.el8.x86_64.rpm https://yum.oracle.com/repo/OracleLinux/OL8/appstream/x86_64/getPackage/oracle-database-preinstall-21c-1.0-1.el8.x86_64.rpm
+	  sudo dnf -y localinstall oracle-database-preinstall-21c*
 
-      # -L 옵션 : Redirect (301, 302)가 응답될 경우, redirect 된 링크로 가서, 파일을 다운로드 받음
-      sudo curl -L -o oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm https://download.oracle.com/otn-pub/otn_software/db-express/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
-
-
-      # 사전 설치 파일 실행
-      sudo dnf -y localinstall oracle-database-preinstall-21c*
       # 설치 파일 실행
-      sudo dnf -y localinstall oracle-database-xe-21c*
-
-      sudo yum -y install oracle-database-preinstall-21c glibc libaio net-tools bc unzip
-
-      echo "=====[ 2. Oracle RPM 설치 ]====="
-      if [ -f /vagrant/oracle-database-xe-21c-1.0-1.ol7.x86_64.rpm ]; then
-        sudo rpm -ivh /vagrant/oracle-database-xe-21c-1.0-1.ol7.x86_64.rpm
-      else
-        echo "ERROR: RPM 파일이 없습니다. /vagrant/ 경로를 확인하세요."
-        exit 1
-      fi
-
-      echo "=====[ 3. Oracle 21c 초기 설정 ]====="
-      echo -e "manager\nmanager\n" | sudo /etc/init.d/oracle-xe-21c configure
-
-      echo "=====[ 4. 환경 변수 설정 ]====="
-      echo 'export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE' >> /home/vagrant/.bashrc
-      echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /home/vagrant/.bashrc
-      echo 'export ORACLE_SID=XE' >> /home/vagrant/.bashrc
-      source /home/vagrant/.bashrc
-
-      echo "=====[ 5. Oracle 서비스 시작 ]====="
-      sudo systemctl enable oracle-xe-21c
-      sudo systemctl start oracle-xe-21c
+      # -L 옵션 : Redirect (301, 302)가 응답될 경우, redirect 된 링크로 가서, 파일을 다운로드 받음
+      # 파일크기가 2.2GB로 Vagrantfile 위치에 복사 추천 : sudo curl -L -o /vagrant/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm https://download.oracle.com/otn-pub/otn_software/db-express/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
+      sudo dnf -y localinstall /vagrant/oracle-database-xe-21c*
     SHELL
   end
 end
