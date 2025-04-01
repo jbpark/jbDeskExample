@@ -47,6 +47,7 @@ Vagrant.configure("2") do |config|
       sudo dnf -y localinstall oracle-database-xe-21c*
 
       echo "========== Configuring Oracle XE with auto password =========="
+      sudo yum install expect -y
     expect <<EOF
     spawn sudo /etc/init.d/oracle-xe-21c configure
     expect "Enter SYS user password:"
