@@ -54,15 +54,15 @@ Vagrant.configure("2") do |config|
 
       export CV_ASSUME_DISTID=RHEL8
       export ORACLE_BASE=/opt/oracle
-      export ORACLE_HOME=\$ORACLE_BASE/product/21c/dbhomeXE
+      export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE
       export ORACLE_SID=XE
-      export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
       sudo echo "========== Setting up environment variables =========="
       sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
       sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
-      sudo echo "export ORACLE_HOME=\$ORACLE_BASE/product/21c/dbhomeXE" | sudo tee -a /etc/environment
-      sudo echo "export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
+      sudo echo "export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE" | sudo tee -a /etc/environment
+      sudo echo "export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
       sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
       source /etc/environment
 
@@ -74,6 +74,36 @@ Vagrant.configure("2") do |config|
 
       echo "========== Configuring Oracle XE with auto password =========="
       printf "Oracle1234\nOracle1234\n" | sudo /etc/init.d/oracle-xe-21c configure
+
+      echo "========== Updating listener.ora =========="
+      cat <<EOL | sudo tee /opt/oracle/homes/OraDBHome21cXE/network/admin/listener.ora
+DEFAULT_SERVICE_LISTENER = XE
+
+LISTENER =
+(DESCRIPTION_LIST =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+  )
+)
+EOL
+
+      sudo chown -R oracle:oinstall /opt/oracle
+      sudo chmod -R 750 /opt/oracle
+      sudo chmod 640 /opt/oracle/homes/OraDBHome21cXE/network/admin/listener.ora
+
+      echo "========== Restarting Oracle Listener =========="
+      sudo -u oracle $ORACLE_HOME/bin/lsnrctl stop
+      sudo -u oracle $ORACLE_HOME/bin/lsnrctl start
+
+      echo "========== Enabling and starting Oracle service =========="
+      sudo systemctl enable oracle-xe-21c
+      sudo systemctl restart oracle-xe-21c
+
+      echo "========== Checking Oracle service status =========="
+      sudo systemctl status oracle-xe-21c --no-pager
+
+      echo "========== Oracle XE 21c Installation Completed! =========="
     SHELL
   end
 end
