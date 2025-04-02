@@ -1,5 +1,5 @@
 Vagrant.configure("2") do |config|
-  # ✅ Rocky Linux 8 사용
+  # ✅ Rocky Linux 9 사용
   config.vm.box = "rockylinux/9"
   config.disksize.size = '20GB'
 
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
       sudo yum install cloud-utils-growpart -y
       sudo growpart /dev/sda 4
       sudo xfs_growfs /
-      echo "=====[ 1. 패키지 업데이트 및 필수 라이브러리 설치 ]====="
+      echo "=====[ 2. 패키지 업데이트 및 필수 라이브러리 설치 ]====="
       sudo yum -y install wget
       sudo systemctl stop firewalld
       sudo systemctl disable firewalld
@@ -37,6 +37,7 @@ Vagrant.configure("2") do |config|
       sudo wget https://dl.rockylinux.org/pub/rocky/8/AppStream/x86_64/os/Packages/c/compat-openssl10-1.0.2o-4.el8_6.x86_64.rpm
       sudo dnf -y localinstall compat-openssl10-1.0.2o-4.el8_6.x86_64.rpm
 
+      echo "=====[ 3. Oracle 설치 ]====="
       # 사전 설치 파일 다운로드
       sudo curl -o oracle-database-preinstall-21c-1.0-1.el8.x86_64.rpm https://yum.oracle.com/repo/OracleLinux/OL8/appstream/x86_64/getPackage/oracle-database-preinstall-21c-1.0-1.el8.x86_64.rpm
 	  sudo dnf -y localinstall oracle-database-preinstall-21c*
@@ -46,13 +47,18 @@ Vagrant.configure("2") do |config|
       sudo curl -L -o oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm https://download.oracle.com/otn-pub/otn_software/db-express/oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
       sudo dnf -y localinstall oracle-database-xe-21c*
 
+export CV_ASSUME_DISTID=RHEL8
+export ORACLE_BASE=/opt/oracle
+export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1
+export ORACLE_SID=XE
 
-echo "========== Setting up environment variables =========="
-echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/profile
-echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/profile
-echo "export PATH=\$ORACLE_HOME/bin:\$PATH" | sudo tee -a /etc/profile
-echo "export ORACLE_SID=XE" | sudo tee -a /etc/profile
-source /etc/profile
+sudo echo "========== Setting up environment variables =========="
+sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
+sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
+sudo echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/environment
+sudo echo "export PATH=\$ORACLE_HOME/bin:\$PATH" | sudo tee -a /etc/environment
+sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
+source /etc/environment
 
 echo "========== Removing old listener config if exists =========="
 sudo rm -rf /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
@@ -109,6 +115,7 @@ echo "========== Oracle XE 21c Installation Completed! =========="
     sudo systemctl status oracle-xe-21c --no-pager
 
     echo "========== Oracle XE 21c Installation Completed! =========="
+
 
     SHELL
   end
