@@ -64,6 +64,9 @@ source /etc/environment
 echo "========== Removing old listener config if exists =========="
 sudo rm -rf /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
 
+echo "Updating /etc/hosts..."
+sudo bash -c 'echo "192.168.56.10 oracle21c" >> /etc/hosts'
+
 echo "========== Configuring Oracle XE with auto password =========="
 printf "Oracle1234\nOracle1234\n" | sudo /etc/init.d/oracle-xe-21c configure
 
