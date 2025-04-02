@@ -56,13 +56,13 @@ Vagrant.configure("2") do |config|
       export ORACLE_BASE=/opt/oracle
       export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE
       export ORACLE_SID=XE
-      export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\$PATH
 
       sudo echo "========== Setting up environment variables =========="
       sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
       sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
       sudo echo "export ORACLE_HOME=/opt/oracle/product/21c/dbhomeXE" | sudo tee -a /etc/environment
-      sudo echo "export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
+      sudo echo "export PATH=/opt/oracle/product/21c/dbhomeXE/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\$PATH" | sudo tee -a /etc/environment
       sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
       source /etc/environment
 
@@ -104,6 +104,28 @@ EOL
       sudo systemctl status oracle-xe-21c --no-pager
 
       echo "========== Oracle XE 21c Installation Completed! =========="
+
+      # 사용자 설정
+      ORACLE_USER="testuser"      # 생성할 계정명
+      ORACLE_PASSWORD="test1234"  # 계정 비밀번호
+      ORACLE_SID="XE"             # DB 서비스명 (XE 기본값)
+
+      # SQL 실행 함수
+      create_user_sql=$(cat <<EOF
+ALTER SESSION SET CONTAINER = XEPDB1;
+CREATE USER $ORACLE_USER IDENTIFIED BY "$ORACLE_PASSWORD";
+GRANT CONNECT, RESOURCE TO $ORACLE_USER;
+ALTER USER $ORACLE_USER QUOTA UNLIMITED ON USERS;
+GRANT CREATE SESSION TO $ORACLE_USER;
+EXIT;
+EOF
+      )
+
+      # SQL 실행 (sysdba 권한 필요)
+      echo "Oracle 계정 생성 중: $ORACLE_USER"
+      echo "$create_user_sql" | sudo -u oracle /opt/oracle/product/21c/dbhomeXE/bin/sqlplus -s / as sysdba
+
+      echo "Oracle 계정 $ORACLE_USER 생성 완료!"
     SHELL
   end
 end
