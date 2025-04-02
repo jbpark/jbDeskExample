@@ -52,106 +52,28 @@ Vagrant.configure("2") do |config|
       sudo rm -rf oracle-database-preinstall-21c-1.0-1.el8.x86_64.rpm
       sudo rm -rf oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm
 
+      export CV_ASSUME_DISTID=RHEL8
+      export ORACLE_BASE=/opt/oracle
+      export ORACLE_HOME=\$ORACLE_BASE/product/21c/dbhomeXE
+      export ORACLE_SID=XE
+      export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-export CV_ASSUME_DISTID=RHEL8
-export ORACLE_BASE=/opt/oracle
-export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1
-export ORACLE_SID=XE
-export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      sudo echo "========== Setting up environment variables =========="
+      sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
+      sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
+      sudo echo "export ORACLE_HOME=\$ORACLE_BASE/product/21c/dbhomeXE" | sudo tee -a /etc/environment
+      sudo echo "export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
+      sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
+      source /etc/environment
 
-sudo echo "========== Setting up environment variables =========="
-sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/environment
-sudo echo "export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
-source /etc/environment
+      echo "========== Removing old listener config if exists =========="
+      sudo rm -rf /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
 
-echo "========== Removing old listener config if exists =========="
-sudo rm -rf /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
-
-
-echo "Updating /etc/hosts..."
-sudo bash -c 'echo "192.168.56.10 oracle21c" >> /etc/hosts'
-
-echo "========== Configuring Oracle XE with auto password =========="
-printf "Oracle1234\nOracle1234\n" | sudo /etc/init.d/oracle-xe-21c configure
-
-
-export CV_ASSUME_DISTID=RHEL8
-export ORACLE_BASE=/opt/oracle
-export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1
-export ORACLE_SID=XE
-export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-sudo echo "========== Setting up environment variables =========="
-sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/environment
-sudo echo "export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
-sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
-source /etc/environment
-
-echo "========== Removing old listener config if exists =========="
-sudo rm -rf /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
-
-echo "Updating /etc/hosts..."
-sudo bash -c 'echo "192.168.56.10 oracle21c" >> /etc/hosts'
-
-echo "========== Configuring Oracle XE with auto password =========="
-printf "Oracle1234\nOracle1234\n" | sudo /etc/init.d/oracle-xe-21c configure
-
-echo "========== Updating listener.ora =========="
-cat <<EOL | sudo tee /opt/oracle/homes/OraDB21Home1/network/admin/listener.ora
-LISTENER =
-  (DESCRIPTION_LIST =
-    (DESCRIPTION =
-      (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521))
-    )
-  )
-EOL
-
-echo "========== Restarting Oracle Listener =========="
-sudo -u oracle $ORACLE_HOME/bin/lsnrctl stop
-sudo -u oracle $ORACLE_HOME/bin/lsnrctl start
-
-echo "========== Enabling and starting Oracle service =========="
-sudo systemctl enable oracle-xe-21c
-sudo systemctl restart oracle-xe-21c
-
-echo "========== Checking Oracle service status =========="
-sudo systemctl status oracle-xe-21c --no-pager
-
-echo "========== Oracle XE 21c Installation Completed! =========="
-
+      echo "Updating /etc/hosts..."
+      sudo bash -c 'echo "192.168.56.10 oracle21c" >> /etc/hosts'
 
       echo "========== Configuring Oracle XE with auto password =========="
-      sudo yum install expect -y
-    expect <<EOF
-    spawn sudo /etc/init.d/oracle-xe-21c configure
-    expect "Enter SYS user password:"
-    send "Oracle123!\r"
-    expect "Confirm the password:"
-    send "Oracle123!\r"
-    expect eof
-    EOF
-
-    echo "========== Setting up environment variables =========="
-    echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/profile
-    echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/profile
-    echo "export PATH=\$ORACLE_HOME/bin:\$PATH" | sudo tee -a /etc/profile
-    source /etc/profile
-
-    echo "========== Enabling Oracle service =========="
-    sudo systemctl enable oracle-xe-21c
-    sudo systemctl start oracle-xe-21c
-
-    echo "========== Checking Oracle service status =========="
-    sudo systemctl status oracle-xe-21c --no-pager
-
-    echo "========== Oracle XE 21c Installation Completed! =========="
-
-
+      printf "Oracle1234\nOracle1234\n" | sudo /etc/init.d/oracle-xe-21c configure
     SHELL
   end
 end
