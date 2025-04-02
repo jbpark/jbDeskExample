@@ -51,12 +51,13 @@ export CV_ASSUME_DISTID=RHEL8
 export ORACLE_BASE=/opt/oracle
 export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1
 export ORACLE_SID=XE
+export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 sudo echo "========== Setting up environment variables =========="
 sudo echo "export CV_ASSUME_DISTID=RHEL8" | sudo tee -a /etc/environment
 sudo echo "export ORACLE_BASE=/opt/oracle" | sudo tee -a /etc/environment
 sudo echo "export ORACLE_HOME=\$ORACLE_BASE/homes/OraDB21Home1" | sudo tee -a /etc/environment
-sudo echo "export PATH=\$ORACLE_HOME/bin:\$PATH" | sudo tee -a /etc/environment
+sudo echo "export PATH=$ORACLE_HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee -a /etc/environment
 sudo echo "export ORACLE_SID=XE" | sudo tee -a /etc/environment
 source /etc/environment
 
