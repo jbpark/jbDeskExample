@@ -1,0 +1,110 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/rocky9"
+
+  def setup_vm(vm, hostname, ip, script_name, py_content, port)
+    vm.vm.hostname = hostname
+    vm.vm.network "private_network", ip: ip
+    vm.vm.provider "virtualbox" do |vb|
+      vb.memory = 512
+      vb.name = hostname
+    end
+
+    vm.vm.provision "shell", inline: <<-SHELL
+      echo "📦 Setting up #{hostname}..."
+
+      # Install Python and Flask
+      sudo dnf install -y python3 python3-pip
+      pip3 install flask requests
+
+      echo "[+] Enabling SSH password login on Rocky Linux..."
+
+      # 비밀번호 로그인 허용
+      sed -i 's/^#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      echo 'vagrant:vagrant' | chpasswd
+      systemctl restart sshd
+
+      # Enable and configure firewalld
+      sudo systemctl enable firewalld
+      sudo systemctl start firewalld
+      sudo firewall-cmd --permanent --add-port=#{port}/tcp
+      sudo firewall-cmd --reload
+
+      # Create Python script
+      cat <<EOF > /home/vagrant/#{script_name}
+#{py_content}
+EOF
+
+      # Make it executable and run in background
+      nohup python3 /home/vagrant/#{script_name} > /dev/null 2>&1 &
+    SHELL
+  end
+
+  # gateway01
+  config.vm.define "gateway01" do |gateway|
+    setup_vm(gateway, "gateway01", "192.168.56.40", "gateway_server.py", <<-PYTHON, 5000
+from flask import Flask, request
+import requests, uuid, logging
+
+app = Flask(__name__)
+logging.basicConfig(filename="/home/vagrant/gateway.log", level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] TID=%(tid)s: %(message)s")
+
+@app.route("/gateway", methods=["GET"])
+def gateway():
+    tid = str(uuid.uuid4())
+    app.logger.info("Incoming request", extra={"tid": tid})
+    res = requests.get("http://192.168.56.41:5001/api", headers={"TID": tid})
+    return res.json()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+    PYTHON
+    )
+  end
+
+  # api01
+  config.vm.define "api01" do |api|
+    setup_vm(api, "api01", "192.168.56.41", "api_server.py", <<-PYTHON, 5001
+from flask import Flask, request
+import requests, logging
+
+app = Flask(__name__)
+logging.basicConfig(filename="/home/vagrant/api.log", level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] TID=%(tid)s: %(message)s")
+
+@app.route("/api", methods=["GET"])
+def api():
+    tid = request.headers.get("TID", "no-tid")
+    app.logger.info("Forwarding to echo01", extra={"tid": tid})
+    res = requests.get("http://192.168.56.42:5002/echo", headers={"TID": tid})
+    return res.json()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001)
+    PYTHON
+    )
+  end
+
+  # echo01
+  config.vm.define "echo01" do |echo|
+    setup_vm(echo, "echo01", "192.168.56.42", "echo_server.py", <<-PYTHON, 5002
+from flask import Flask, request
+import logging
+
+app = Flask(__name__)
+logging.basicConfig(filename="/home/vagrant/echo.log", level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] TID=%(tid)s: %(message)s")
+
+@app.route("/echo", methods=["GET"])
+def echo():
+    tid = request.headers.get("TID", "no-tid")
+    app.logger.info("Echo received", extra={"tid": tid})
+    return {"message": "Echo from echo01", "TID": tid}
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5002)
+    PYTHON
+    )
+  end
+end
