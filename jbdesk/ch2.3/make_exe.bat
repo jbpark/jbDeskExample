@@ -49,11 +49,18 @@ if %errorlevel% neq 0 (
     pip install cx_Oracle
 )
 
-:: pymysql 설치
-pip show pymysql >nul 2>nul
+:: cryptography 설치
+pip show cryptography >nul 2>nul
 if %errorlevel% neq 0 (
-    echo Installing pymysql...
-    pip install pymysql
+    echo Installing cryptography...
+    pip install cryptography
+)
+
+:: pyyaml 설치
+pip show pyyaml >nul 2>nul
+if %errorlevel% neq 0 (
+    echo Installing pyyaml...
+    pip install pyyaml
 )
 
 :: exe 파일 생성 > dist 폴더에 생성됨
