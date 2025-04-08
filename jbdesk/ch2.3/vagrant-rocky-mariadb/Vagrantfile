@@ -81,6 +81,18 @@ EOF
         echo "[+] Opening firewall for MariaDB..."
         firewall-cmd --permanent --add-port=3306/tcp
         firewall-cmd --reload
+
+        echo "[+] Enabling SSH password login..."
+
+        # 1. 비밀번호 로그인 허용
+        sed -i 's/^#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+        # 2. root 대신 vagrant 유저 로그인 허용
+        echo 'vagrant:vagrant' | chpasswd
+
+        # 3. SSH 재시작
+        systemctl restart sshd
       SHELL
     end
   end

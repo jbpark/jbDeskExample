@@ -1,0 +1,40 @@
+Vagrant.configure("2") do |config|
+  # 공통 설정
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+  end
+
+  # Rocky Linux 9 VM
+  config.vm.define "rocky9-first" do |rocky|
+    rocky.vm.box = "generic/rocky9"
+    rocky.vm.hostname = "rocky9-first"
+    rocky.vm.network "private_network", ip: "192.168.56.30"
+
+    rocky.vm.provision "shell", inline: <<-SHELL
+      echo "[+] Enabling SSH password login on Rocky Linux..."
+
+      # 비밀번호 로그인 허용
+      sed -i 's/^#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      echo 'vagrant:vagrant' | chpasswd
+      systemctl restart sshd
+    SHELL
+  end
+
+  # Ubuntu VM
+  config.vm.define "ubuntu-second" do |ubuntu|
+    ubuntu.vm.box = "generic/ubuntu2204"
+    ubuntu.vm.hostname = "ubuntu-second"
+    ubuntu.vm.network "private_network", ip: "192.168.56.31"
+
+    ubuntu.vm.provision "shell", inline: <<-SHELL
+      echo "[+] Enabling SSH password login on Ubuntu..."
+
+      sed -i 's/^#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      echo 'vagrant:vagrant' | chpasswd
+      systemctl restart sshd
+    SHELL
+  end
+end
